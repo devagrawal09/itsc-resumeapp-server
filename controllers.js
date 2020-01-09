@@ -1,13 +1,20 @@
 const Crypto = require('crypto')
 const util = require('util')
+const jwt = require('jsonwebtoken')
 const Applicant = require('./applicant')
 const Manager = require('./manager')
+
+const SECRET_KEY = process.env.SECRET_KEY
 
 const generateRandomString = async (len)=> {
     const asyncFunc = util.promisify(Crypto.randomBytes)
     const buffer = await asyncFunc(len)
     return buffer.toString('hex')
 }
+
+const generateToken = async (payload, key)=> util.promisify(jwt.sign)(payload, key)
+
+const verifyToken = async (token, key)=> util.promisify(jwt.verify)(token, key)
 
 exports.newApplicant = async (req, res)=> {
     const data = req.body
@@ -29,8 +36,10 @@ exports.loginManager = async (req, res)=> {
     const credentials = req.body.credentials
     try {
         const manager = await Manager.login(credentials)
-        const token = await generateRandomString(48)
-        await manager.set({ token }).save()
+        const payload = { role: 'Manager', id: manager.get('id') }
+        console.log({ payload })
+        const token = await generateToken(payload, SECRET_KEY)
+        console.log({ token })
         res.json({ token })
     } catch(err) {
         console.error(`Error logging in: ${err}`)
@@ -38,19 +47,21 @@ exports.loginManager = async (req, res)=> {
     }
 }
 
-exports.logoutManager = async (req, res)=> {
-    const credentials = req.body.credentials
+exports.authMiddleware = async (req, res, next)=> {
     try {
-        const manager = await new Manager(credentials).fetch()
-        const token = manager.get('token')
-        if( !token.length ) {
-            res.status(401).send('Already logged out!')
-        }
-        await manager.set({ token: '' }).save()
-        res.status(200).send()
+        const authHeader = req.headers.authorization
+        console.log({ authHeader })
+        if(!authHeader)
+            return res.status(403).send()
+        const token = authHeader.split(' ').pop()
+        const payload = await verifyToken(token, SECRET_KEY)
+        console.log({ payload })
+        if( payload.role !== 'Manager' )
+            return res.status(403).send()
+        next()
     } catch(err) {
-        console.error(`Error logging out: ${err}`)
-        res.status(500).send()
+        console.error(err)
+        res.status(403).send()
     }
 }
 

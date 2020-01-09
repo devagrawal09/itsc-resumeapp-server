@@ -18,7 +18,7 @@ knex.schema.createTableIfNotExists('applicants', function(table) {
     table.string('position')
     table.boolean('deleted')
     table.timestamps()
-}).then(res=> {
+}).then(()=> {
     console.log('Applicants table created')
 })
 
@@ -26,9 +26,8 @@ knex.schema.createTableIfNotExists('managers', function(table) {
     table.increments()
     table.string('username')
     table.string('password')
-    table.string('token')
     table.timestamps()
-}).then(res=> {
+}).then(()=> {
     console.log('Managers table created')
 })
 

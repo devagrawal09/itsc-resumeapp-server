@@ -9,10 +9,9 @@ router.route('/applicant').post(controllers.newApplicant)
 
 router.route('/login').post(controllers.loginManager)
 
-router.route('/logout').post(controllers.logoutManager)
-
-router.route('/applicant').get(controllers.fetchApplicants)
-
-router.route('/applicant').delete(controllers.deleteApplicant)
+router.route('/applicant')
+    .all(controllers.authMiddleware)
+    .get(controllers.fetchApplicants)
+    .delete(controllers.deleteApplicant)
 
 module.exports = router
