@@ -19,6 +19,6 @@ app.use('/static', express.static('resume-uploads'))
 
 app.use('/', express.static('client'))
 
-app.listen(processs.env.PORT, ()=> {
+app.listen(process.env.PORT, ()=> {
     console.log('Server running at port 3000')
 })
